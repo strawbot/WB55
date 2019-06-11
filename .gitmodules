@@ -1,0 +1,3 @@
+[submodule "TimbreOS"]
+	path = TimbreOS
+	url = https://github.com/strawbot/EmbeddedTimbre.git
