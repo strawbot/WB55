@@ -57,6 +57,9 @@ static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USB_PCD_Init(void);
 /* USER CODE BEGIN PFP */
+#define CONSOLE USART1
+HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size, uint32_t Timeout);
+HAL_StatusTypeDef HAL_UART_Receive(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size, uint32_t Timeout);
 
 /* USER CODE END PFP */
 
@@ -75,10 +78,19 @@ void runTimeEvents() { timeevent_IRQ(); later(runTimeEvents); }
 void blueOn()  { HAL_GPIO_WritePin(GPIOB, LD1_Pin, GPIO_PIN_SET); }
 void blueOff() { HAL_GPIO_WritePin(GPIOB, LD1_Pin, GPIO_PIN_RESET); }
 
+static void imAlive() {
+    static Byte current = 0;
+    static struct {
+		 Long time;  void (*action)(void); Byte next;
+		} ledState[] = {
+		{10, 	blueOn,	 1},
+		{190,	blueOff, 2},
+		{10,	blueOn,	 3},
+		{790,	blueOff, 0}};
 
-void blinkBlue() {
-	after(ta_msecs(500), blinkBlue);
-	HAL_GPIO_ReadPin(GPIOB, LD1_Pin) ? blueOff() : blueOn();
+    ledState[current].action();
+	after(ledState[current].time, imAlive);
+	current = ledState[current].next;
 }
 
 /* USER CODE END 0 */
@@ -121,7 +133,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  later(blinkBlue);
+  later(imAlive);
   while (1)
   {
 	  runMachines();
